@@ -47,6 +47,7 @@ public class WorkspaceTest {
     }
 
     private void screenshot(ActivityScenario<MainActivity> scenario, String name) throws Exception {
+        waitFor(scenario, "!document.querySelector('#toast').classList.contains('visible')");
         // DOM updates precede WebView's compositor. Wait for a committed
         // visual frame, then let transitions and transient notices settle.
         CountDownLatch painted = new CountDownLatch(1);
@@ -56,7 +57,7 @@ public class WorkspaceTest {
             }));
         assertTrue("WebView frame did not commit", painted.await(10, TimeUnit.SECONDS));
         InstrumentationRegistry.getInstrumentation().waitForIdleSync();
-        Thread.sleep(4000);
+        Thread.sleep(1000);
         // MediaStore downloads survive Gradle uninstalling the test app.
         // These captures contain only this test's fictional sample records.
         ContentResolver resolver = InstrumentationRegistry.getInstrumentation().getTargetContext().getContentResolver();
