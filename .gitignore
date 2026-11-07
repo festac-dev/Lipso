@@ -1,0 +1,16 @@
+.lipso-data/
+.margin-data/
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+test-results/
+playwright-report/
+.env
+.env.*
+!.env.example
+.git-backup/
+.git_backup/
+*.pem
+*.key
+*.log

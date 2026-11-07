@@ -1,0 +1,16 @@
+{
+  "name": "lipso-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "python3 app.py",
+    "demo": "python3 app.py --demo",
+    "test": "python3 -m unittest discover -s tests -v",
+    "test:browser": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.0"
+  },
+  "license": "Apache-2.0"
+}
