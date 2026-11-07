@@ -49,7 +49,7 @@ jobs:
           disable-animations: true
           script: |
             ./android/gradlew -p android --no-daemon connectedDebugAndroidTest
-            adb pull /sdcard/Android/data/dev.festac.lipso/files/screenshots android/app/build/android-screenshots
+            adb pull /sdcard/Download/lipso-screenshots android/app/build/android-screenshots
       - name: Upload Android checks and screenshots
         if: always()
         uses: actions/upload-artifact@v4

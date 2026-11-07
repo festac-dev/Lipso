@@ -5,14 +5,17 @@ import android.app.Activity;
 import android.app.Instrumentation;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ContentValues;
+import android.content.ContentResolver;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.webkit.WebView;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.CountDownLatch;
@@ -44,12 +47,18 @@ public class WorkspaceTest {
     }
 
     private void screenshot(String name) throws Exception {
-        File directory = new File(InstrumentationRegistry.getInstrumentation().getTargetContext()
-            .getExternalFilesDir(null), "screenshots");
-        directory.mkdirs();
+        // MediaStore downloads survive Gradle uninstalling the test app.
+        // These captures contain only this test's fictional sample records.
+        ContentResolver resolver = InstrumentationRegistry.getInstrumentation().getTargetContext().getContentResolver();
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.MediaColumns.DISPLAY_NAME, name);
+        values.put(MediaStore.MediaColumns.MIME_TYPE, "image/png");
+        values.put(MediaStore.MediaColumns.RELATIVE_PATH, "Download/lipso-screenshots");
+        Uri target = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+        assertNotNull(target);
         Bitmap bitmap = InstrumentationRegistry.getInstrumentation().getUiAutomation().takeScreenshot();
         assertNotNull(bitmap);
-        try (FileOutputStream out = new FileOutputStream(new File(directory, name))) {
+        try (OutputStream out = resolver.openOutputStream(target)) {
             assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG, 100, out));
         }
         bitmap.recycle();
