@@ -17,9 +17,15 @@ These captures show the running application with fictional sample records.
 ![Lipso desktop overview in light mode](docs/screenshots/desktop-overview-light.png)
 ![Lipso planning lab in dark mode](docs/screenshots/desktop-planning-dark.png)
 
-| Mobile · light | Mobile · dark |
+| Mobile browser · light | Mobile browser · dark |
 | --- | --- |
 | ![Lipso mobile light theme](docs/screenshots/mobile-overview-light.png) | ![Lipso mobile dark theme](docs/screenshots/mobile-overview-dark.png) |
+
+| Android app · light | Android app · dark |
+| --- | --- |
+| ![Lipso Android light theme](docs/screenshots/android-overview-light.png) | ![Lipso Android dark theme](docs/screenshots/android-overview-dark.png) |
+
+Android captures come from the app running in an Android 15 emulator. [More Android screenshots](android/README.md#screenshots).
 
 Regenerate the browser screenshots with `npm run screenshots` after installing the browser test dependencies.
 

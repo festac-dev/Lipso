@@ -19,6 +19,18 @@ The installable development APK is `app/build/outputs/apk/debug/app-debug.apk`. 
 
 Run the instrumentation check on an emulator with no existing Lipso workspace. It seeds fictional records and checks embedded Python/pypdf, authenticated HTTP access, document import, search, original downloads, ZIP/calendar export, cash-flow simulation, integrity, appearance persistence, and Android Back handling. It records screenshots from the actual Android WebView.
 
+## Screenshots
+
+Captured from the running Android app with fictional sample records.
+
+| Overview · light | Overview · dark |
+| --- | --- |
+| ![Android overview in light mode](../docs/screenshots/android-overview-light.png) | ![Android overview in dark mode](../docs/screenshots/android-overview-dark.png) |
+
+| Navigation | Planning |
+| --- | --- |
+| ![Android navigation drawer](../docs/screenshots/android-navigation-dark.png) | ![Android planning lab](../docs/screenshots/android-planning-dark.png) |
+
 ## App behavior
 
 - Documents and plans live in the app's private `files/workspace/lipso.sqlite3` database. The Android workspace is separate from an existing desktop or Termux workspace.
@@ -34,6 +46,8 @@ Run the instrumentation check on an emulator with no existing Lipso workspace. I
 Keep the signing key outside the repository and preserve a secure backup. Future APK updates must use the same application ID and signing key, with a larger `versionCode`. Never commit keys or passwords. CI uploads unsigned release artifacts so no signing secret is needed in the repository.
 
 Align the unsigned APK with Android SDK `zipalign`, sign it with `apksigner`, and verify the result before publishing. Publish the resulting APK and its SHA-256 checksum as GitHub release assets. Debug APKs use a different certificate and cannot update a release installation.
+
+The initial release certificate's SHA-256 fingerprint is `a2c547012e56a3e4ce8d84005f70012663241e3123e8e7e4b78b09d63213d3fe`.
 
 ## Licenses
 
