@@ -93,3 +93,40 @@ class HTTPTests(unittest.TestCase):
         self.assertEqual(response.status, 200)
         self.assertGreater(int(response.headers['Content-Length']), 0)
         self.assertEqual(response.read(), b'')
+
+
+class EmbeddedHTTPTests(unittest.TestCase):
+    def test_android_session_and_bundled_assets(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'index.html').write_text('Bundled Android workspace')
+            server = make_server(Store(root / 'workspace.db'), 0, web=root, session_token='secret-session')
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            base = f'http://127.0.0.1:{server.server_address[1]}'
+            try:
+                for cookie in ['', 'lipso_session=wrong', 'lipso_session="malformed', 'lipso_session="é"']:
+                    with self.subTest(cookie=cookie):
+                        request = urllib.request.Request(base + '/api/state', headers={'Cookie': cookie})
+                        with self.assertRaises(urllib.error.HTTPError) as error:
+                            urllib.request.urlopen(request, timeout=5)
+                        self.assertEqual(error.exception.code, 403)
+                        error.exception.close()
+                for path in ['/', '/api/state']:
+                    request = urllib.request.Request(base + path, headers={'Cookie': 'lipso_session=secret-session'})
+                    with urllib.request.urlopen(request, timeout=5) as response:
+                        self.assertEqual(response.status, 200)
+                        if path == '/': self.assertEqual(response.read(), b'Bundled Android workspace')
+                request = urllib.request.Request(base + '/api/demo', data=b'{}', headers={
+                    'Cookie': 'lipso_session=secret-session', 'Content-Type': 'application/json'})
+                with self.assertRaises(urllib.error.HTTPError) as error:
+                    urllib.request.urlopen(request, timeout=5)
+                self.assertEqual(error.exception.code, 403)
+                error.exception.close()
+                request.add_header('X-Lipso-Client', 'workspace')
+                with urllib.request.urlopen(request, timeout=5) as response:
+                    self.assertEqual(response.status, 201)
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(2)

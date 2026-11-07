@@ -1,0 +1,56 @@
+plugins {
+    id 'com.android.application'
+    id 'com.chaquo.python'
+}
+
+android {
+    namespace 'dev.festac.lipso'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'dev.festac.lipso'
+        minSdk 24
+        targetSdk 35
+        versionCode 1
+        versionName '1.0.0'
+        ndk { abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86_64' }
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    }
+    buildTypes {
+        release { minifyEnabled false }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    testOptions { animationsDisabled true }
+    buildFeatures { buildConfig true }
+}
+
+def bundledPython = layout.buildDirectory.dir('generated/lipsoPython')
+def syncLipso = tasks.register('syncLipso', Sync) {
+    into bundledPython
+    from('../../lipso') { into 'lipso'; include '**/*.py' }
+    from('../../web') { into 'web' }
+    from('../licenses') { into 'licenses' }
+    from('../../LICENSE') { into 'licenses' }
+    from('../../NOTICE') { into 'licenses' }
+}
+
+chaquopy {
+    defaultConfig {
+        version = '3.11'
+        pip { install '-r', '../../requirements.txt' }
+    }
+    sourceSets {
+        getByName('main') { srcDir bundledPython }
+    }
+}
+tasks.configureEach {
+    if (name.toLowerCase().contains('python')) { dependsOn syncLipso }
+}
+
+dependencies {
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test:core:1.6.1'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+}

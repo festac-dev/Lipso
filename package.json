@@ -7,7 +7,8 @@
     "start": "python3 app.py",
     "demo": "python3 app.py --demo",
     "test": "python3 -m unittest discover -s tests -v",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "screenshots": "node scripts/screenshots.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.65.0"

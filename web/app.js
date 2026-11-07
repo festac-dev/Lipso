@@ -369,6 +369,9 @@ async function runAction(action, element) {
     const data = structuredClone(state.plan.data); data[kind] = data[kind].filter(item => item.id !== id); return persistPlan(data);
   }
   if (action === 'export-plan') {
+    if (window.LipsoAndroid?.savePlan) {
+      window.LipsoAndroid.savePlan(JSON.stringify(state.plan.data, null, 2)); return;
+    }
     const blob = new Blob([JSON.stringify(state.plan.data, null, 2)], { type: 'application/json' });
     downloadBlob(blob, 'lipso-plan.json'); return;
   }

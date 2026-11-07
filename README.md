@@ -6,6 +6,23 @@ A contract changes. An invoice disagrees. A delivery slips. The payment arrives 
 
 This is a working local application with a browser interface, a CLI, SQLite persistence, and executable tests. There is no account, hosted backend, external AI service, or API key. The application makes no runtime network requests beyond its own local server.
 
+## Android
+
+Download the APK from [GitHub Releases](https://github.com/festac-dev/Lipso/releases/latest). The Android app includes its Python backend and runs offline without Termux. It uses a separate private workspace and supports Android 7.0+ with a current Android System WebView. [Build instructions and storage details](android/README.md).
+
+## Screenshots
+
+These captures show the running application with fictional sample records.
+
+![Lipso desktop overview in light mode](docs/screenshots/desktop-overview-light.png)
+![Lipso planning lab in dark mode](docs/screenshots/desktop-planning-dark.png)
+
+| Mobile · light | Mobile · dark |
+| --- | --- |
+| ![Lipso mobile light theme](docs/screenshots/mobile-overview-light.png) | ![Lipso mobile dark theme](docs/screenshots/mobile-overview-dark.png) |
+
+Regenerate the browser screenshots with `npm run screenshots` after installing the browser test dependencies.
+
 ## Run
 
 Python 3.10+ with SQLite FTS5 is required. Node is only needed for browser tests, not the application.
@@ -94,7 +111,7 @@ ZIP exports contain originals, extracted text, findings and action states, plans
 
 ## Data and trust boundaries
 
-The server binds to `127.0.0.1`. It validates the Host and Origin headers and requires a custom header on mutation requests. It serves an explicit static-file allowlist, uses parameterized SQL and escaped document rendering, and sets a restrictive content security policy. There is no authentication or remote sharing mode. Do not expose it through an internet tunnel as if it were a multiuser service.
+The server binds to `127.0.0.1`. It validates the Host and Origin headers and requires a custom header on mutation requests. It serves an explicit static-file allowlist, uses parameterized SQL and escaped document rendering, and sets a restrictive content security policy. The Android build additionally requires an app session cookie; the desktop server has no authentication. There is no remote sharing mode. Do not expose it through an internet tunnel as if it were a multiuser service.
 
 Data is **not encrypted by this application**. Protect the device and its backups appropriately. The hash chain detects inconsistent or unlogged edits, not a malicious rewrite of the entire database. It is not a signature, an author-identity check, or proof that a claim is true. A deletion removes the original and indexed content while retaining a content-free deletion event and earlier import hashes. References in plans remain visible as missing evidence. Copies previously exported or backed up are unaffected.
 

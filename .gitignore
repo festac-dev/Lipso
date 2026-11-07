@@ -14,3 +14,9 @@ playwright-report/
 *.pem
 *.key
 *.log
+android/.gradle/
+android/**/build/
+android/local.properties
+*.jks
+*.keystore
+dist/

@@ -8,6 +8,7 @@ import re
 import secrets
 import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.cookies import CookieError, SimpleCookie
 from pathlib import Path
 from urllib.parse import parse_qs, quote, unquote, urlsplit
 
@@ -21,7 +22,7 @@ WEB = Path(__file__).resolve().parent.parent / 'web'
 MAX_BODY = (MAX_FILE * 4 // 3) + 65536
 
 
-def handler_for(store):
+def handler_for(store, *, web=WEB, session_token=None):
     class Handler(BaseHTTPRequestHandler):
         server_version = 'Lipso/1.0'
 
@@ -61,6 +62,18 @@ def handler_for(store):
             if origin and origin not in {f'http://127.0.0.1:{expected_port}', f'http://localhost:{expected_port}'}:
                 self.send_json({'error': 'Cross-origin requests are not allowed.'}, 403)
                 return False
+            # The Android WebView receives this per-process secret natively.
+            # Other apps on the same device must not read its loopback server.
+            if session_token is not None:
+                cookies = SimpleCookie()
+                try:
+                    cookies.load(self.headers.get('Cookie', ''))
+                    supplied = cookies['lipso_session'].value if 'lipso_session' in cookies else ''
+                except CookieError:
+                    supplied = ''
+                if not secrets.compare_digest(supplied.encode(), session_token.encode()):
+                    self.send_json({'error': 'Open this workspace through the Lipso app.'}, 403)
+                    return False
             # Keep already-open browser tabs and local clients working after the rename.
             client_header = self.headers.get('X-Lipso-Client') or self.headers.get('X-Margin-Client')
             if mutation and client_header != 'workspace':
@@ -120,7 +133,7 @@ def handler_for(store):
                 elif re.fullmatch(r'/api/documents/[a-f0-9]{32}', path):
                     self.send_json(store.document(path.split('/')[3]))
                 elif path in {'/', '/index.html', '/style.css', '/app.js', '/theme.js', '/icon.svg'}:
-                    file = WEB / ('index.html' if path == '/' else path[1:])
+                    file = Path(web) / ('index.html' if path == '/' else path[1:])
                     raw = file.read_bytes()
                     mime = {'.js': 'text/javascript', '.css': 'text/css', '.html': 'text/html', '.svg': 'image/svg+xml'}[file.suffix]
                     self._headers(content_type=mime + '; charset=utf-8', length=len(raw))
@@ -211,7 +224,7 @@ def handler_for(store):
     return Handler
 
 
-def make_server(store, port=3000):
-    server = ThreadingHTTPServer(('127.0.0.1', port), handler_for(store))
+def make_server(store, port=3000, *, web=WEB, session_token=None):
+    server = ThreadingHTTPServer(('127.0.0.1', port), handler_for(store, web=web, session_token=session_token))
     server.daemon_threads = True
     return server

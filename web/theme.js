@@ -6,6 +6,9 @@
   const validTheme = value => value === 'light' || value === 'dark' ? value : null;
   let preference = null;
   try { preference = validTheme(localStorage.getItem(storageKey)); } catch { /* Storage may be disabled. */ }
+  // The embedded server uses a new port after process restarts. Android keeps
+  // the preference outside origin-scoped browser storage so it survives.
+  if (window.LipsoAndroid?.getTheme) preference = validTheme(window.LipsoAndroid.getTheme());
 
   function applyTheme() {
     const theme = preference || (systemTheme.matches ? 'dark' : 'light');
@@ -25,6 +28,7 @@
     if (!event.target.closest('#theme-toggle')) return;
     preference = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
     try { localStorage.setItem(storageKey, preference); } catch { /* Still switch for this visit. */ }
+    if (window.LipsoAndroid?.setTheme) window.LipsoAndroid.setTheme(preference);
     applyTheme();
   });
   systemTheme.addEventListener('change', () => { if (!preference) applyTheme(); });
