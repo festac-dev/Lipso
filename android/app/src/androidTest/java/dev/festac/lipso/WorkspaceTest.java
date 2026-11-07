@@ -46,7 +46,17 @@ public class WorkspaceTest {
         fail("Timed out: " + expression + "; page: " + evaluate(scenario, "document.body.innerText.slice(0, 600)"));
     }
 
-    private void screenshot(String name) throws Exception {
+    private void screenshot(ActivityScenario<MainActivity> scenario, String name) throws Exception {
+        // DOM updates precede WebView's compositor. Wait for a committed
+        // visual frame, then let transitions and transient notices settle.
+        CountDownLatch painted = new CountDownLatch(1);
+        scenario.onActivity(activity -> activity.workspaceView().postVisualStateCallback(1,
+            new WebView.VisualStateCallback() {
+                @Override public void onComplete(long requestId) { painted.countDown(); }
+            }));
+        assertTrue("WebView frame did not commit", painted.await(10, TimeUnit.SECONDS));
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+        Thread.sleep(4000);
         // MediaStore downloads survive Gradle uninstalling the test app.
         // These captures contain only this test's fictional sample records.
         ContentResolver resolver = InstrumentationRegistry.getInstrumentation().getTargetContext().getContentResolver();
@@ -91,7 +101,7 @@ public class WorkspaceTest {
             evaluate(scenario, "document.querySelector('[data-action=demo]').click()");
             waitFor(scenario, "document.body.innerText.includes('Two versions of monthly rent.')");
             evaluate(scenario, "document.documentElement.dataset.theme !== 'light' && document.querySelector('#theme-toggle').click()");
-            screenshot("android-overview-light.png");
+            screenshot(scenario, "android-overview-light.png");
             // Exercise the actual Android Python, SQLite FTS5, pypdf import,
             // document store, planner, ZIP/ICS endpoints and HttpOnly cookie.
             evaluate(scenario, "window.smoke='pending'; (async () => { try {"
@@ -111,10 +121,10 @@ public class WorkspaceTest {
             assertEquals("\"ok\"", evaluate(scenario, "window.smoke"));
             evaluate(scenario, "document.querySelector('#theme-toggle').click()");
             waitFor(scenario, "document.documentElement.dataset.theme === 'dark'");
-            screenshot("android-overview-dark.png");
+            screenshot(scenario, "android-overview-dark.png");
             evaluate(scenario, "document.querySelector('[data-action=menu]').click()");
             waitFor(scenario, "document.body.classList.contains('nav-open')");
-            screenshot("android-navigation-dark.png");
+            screenshot(scenario, "android-navigation-dark.png");
             scenario.onActivity(MainActivity::onBackPressed);
             waitFor(scenario, "!document.body.classList.contains('nav-open')");
             scenario.recreate();
@@ -122,7 +132,7 @@ public class WorkspaceTest {
             assertEquals("\"dark\"", evaluate(scenario, "document.documentElement.dataset.theme"));
             evaluate(scenario, "document.querySelector('[data-view=plans]').click()");
             waitFor(scenario, "document.body.innerText.includes('A range of tomorrows')");
-            screenshot("android-planning-dark.png");
+            screenshot(scenario, "android-planning-dark.png");
             checkSavePicker(scenario, "document.querySelector('[data-action=export-plan]').click()");
             checkSavePicker(scenario, "document.querySelector('[data-action=export]').click()");
         }
