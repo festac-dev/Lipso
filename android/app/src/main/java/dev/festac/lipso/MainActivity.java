@@ -89,8 +89,8 @@ public class MainActivity extends Activity {
                 if (!Python.isStarted()) Python.start(new AndroidPlatform(getApplicationContext()));
                 PyObject session = Python.getInstance().getModule("mobile")
                     .callAttr("start", getFilesDir().getAbsolutePath());
-                String url = session.get("url").toString();
-                String cookie = "lipso_session=" + session.get("token").toString();
+                String url = session.callAttr("get", "url").toString();
+                String cookie = "lipso_session=" + session.callAttr("get", "token").toString();
                 runOnUiThread(() -> {
                     if (isDestroyed()) return;
                     baseUrl = url;

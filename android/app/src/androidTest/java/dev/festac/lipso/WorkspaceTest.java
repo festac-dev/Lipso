@@ -1,6 +1,10 @@
 package dev.festac.lipso;
 
 import android.graphics.Bitmap;
+import android.app.Activity;
+import android.app.Instrumentation;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.webkit.WebView;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -51,6 +55,22 @@ public class WorkspaceTest {
         bitmap.recycle();
     }
 
+    private void checkSavePicker(ActivityScenario<MainActivity> scenario, String trigger) throws Exception {
+        Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
+        IntentFilter filter = new IntentFilter(Intent.ACTION_CREATE_DOCUMENT);
+        filter.addCategory(Intent.CATEGORY_OPENABLE);
+        filter.addDataType("*/*");
+        Instrumentation.ActivityMonitor monitor = instrumentation.addMonitor(filter,
+            new Instrumentation.ActivityResult(Activity.RESULT_CANCELED, null), true);
+        try {
+            evaluate(scenario, trigger);
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(20);
+            while (monitor.getHits() == 0 && System.nanoTime() < deadline) Thread.sleep(100);
+            assertEquals("Native export did not reach the Save as picker", 1, monitor.getHits());
+            instrumentation.waitForIdleSync();
+        } finally { instrumentation.removeMonitor(monitor); }
+    }
+
     @Test public void offlineWorkspaceSurvivesReopen() throws Exception {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             waitFor(scenario, "!!document.querySelector('[data-action=demo]')");
@@ -94,6 +114,8 @@ public class WorkspaceTest {
             evaluate(scenario, "document.querySelector('[data-view=plans]').click()");
             waitFor(scenario, "document.body.innerText.includes('A range of tomorrows')");
             screenshot("android-planning-dark.png");
+            checkSavePicker(scenario, "document.querySelector('[data-action=export-plan]').click()");
+            checkSavePicker(scenario, "document.querySelector('[data-action=export]').click()");
         }
     }
 }
